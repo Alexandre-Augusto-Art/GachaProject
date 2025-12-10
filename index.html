@@ -465,11 +465,11 @@
 
     <!-- STATE 5: DETAILS MODAL -->
     <div id="details-modal" class="fixed inset-0 z-[70] bg-black/80 modal-backdrop hidden flex-col items-center justify-center p-10">
-        <div class="bg-[#1b191c] border border-green-500/50 w-full max-w-5xl h-[80vh] flex flex-col relative shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+        <div id="modal-container" class="bg-[#1b191c] border border-green-500/50 w-full max-w-5xl h-[80vh] flex flex-col relative shadow-[0_0_50px_rgba(0,0,0,0.8)]">
             <!-- Modal Header -->
-            <div class="bg-black/50 p-6 border-b border-green-500/30 flex justify-between items-center">
+            <div id="modal-header" class="bg-black/50 p-6 border-b border-green-500/30 flex justify-between items-center">
                 <h2 class="text-2xl font-mono text-white tracking-widest flex items-center gap-3">
-                    <span class="text-green-500">>></span> DATABASE_CONTENTS // ALL_ITEMS
+                    <span id="modal-prefix" class="text-green-500">>></span> DATABASE_CONTENTS // ALL_ITEMS
                 </h2>
                 <button onclick="closeDetailsModal()" class="text-gray-500 hover:text-red-500 hover:scale-110 transition text-2xl font-bold font-mono">X</button>
             </div>
@@ -480,7 +480,7 @@
                 
                 <!-- Grand Prize Section -->
                 <div class="mb-10">
-                    <h3 class="text-yellow-400 font-black text-3xl mb-6 border-b border-yellow-400/30 pb-2 flex justify-between">
+                    <h3 id="modal-grand-title" class="text-yellow-400 font-black text-3xl mb-6 border-b border-yellow-400/30 pb-2 flex justify-between">
                         GRAND PRIZE <span class="text-sm font-mono font-normal opacity-70 self-end">PROBABILITY: 10%</span>
                     </h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="details-grand-list"></div>
@@ -488,7 +488,7 @@
 
                 <!-- Medium Prize Section -->
                 <div class="mb-10">
-                    <h3 class="text-purple-400 font-black text-3xl mb-6 border-b border-purple-400/30 pb-2 flex justify-between">
+                    <h3 id="modal-medium-title" class="text-purple-400 font-black text-3xl mb-6 border-b border-purple-400/30 pb-2 flex justify-between">
                         RARE PRIZE <span class="text-sm font-mono font-normal opacity-70 self-end">PROBABILITY: 30%</span>
                     </h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="details-medium-list"></div>
@@ -496,7 +496,7 @@
 
                 <!-- Basic Prize Section -->
                 <div>
-                    <h3 class="text-blue-400 font-black text-3xl mb-6 border-b border-blue-400/30 pb-2 flex justify-between">
+                    <h3 id="modal-basic-title" class="text-blue-400 font-black text-3xl mb-6 border-b border-blue-400/30 pb-2 flex justify-between">
                         BASIC PRIZE <span class="text-sm font-mono font-normal opacity-70 self-end">PROBABILITY: 60%</span>
                     </h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="details-basic-list"></div>
@@ -526,6 +526,32 @@
         const BANNER_ACCENTS = [
             "#00ff84", // Banner 0 - Artist Cache
             "#a200ff"  // Banner 1 - Concept Arsenal
+        ];
+
+        // Modal themes per banner
+        const MODAL_THEMES = [
+            {
+                // Banner 0 - Artist Cache (Verde/Cyan)
+                bg: '#1b191c',
+                border: '#00ff84',
+                borderOpacity: 0.5,
+                headerBorder: 'rgba(0, 255, 132, 0.3)',
+                accent: '#00ff84',
+                grandPrize: { text: '#facc15', border: 'rgba(250, 204, 21, 0.3)', itemText: '#fef08a', itemBorder: 'rgba(250, 204, 21, 0.3)' },
+                rarePrize: { text: '#a78bfa', border: 'rgba(167, 139, 250, 0.3)', itemText: '#c4b5fd', itemBorder: 'rgba(167, 139, 250, 0.3)' },
+                basicPrize: { text: '#60a5fa', border: 'rgba(96, 165, 250, 0.3)', itemText: '#93c5fd', itemBorder: 'rgba(96, 165, 250, 0.3)' }
+            },
+            {
+                // Banner 1 - Concept Arsenal (Roxo/Magenta)
+                bg: '#1a0f1a',
+                border: '#a200ff',
+                borderOpacity: 0.5,
+                headerBorder: 'rgba(162, 0, 255, 0.3)',
+                accent: '#a200ff',
+                grandPrize: { text: '#fbbf24', border: 'rgba(251, 191, 36, 0.3)', itemText: '#fcd34d', itemBorder: 'rgba(251, 191, 36, 0.3)' },
+                rarePrize: { text: '#c084fc', border: 'rgba(192, 132, 252, 0.3)', itemText: '#d8b4fe', itemBorder: 'rgba(192, 132, 252, 0.3)' },
+                basicPrize: { text: '#a78bfa', border: 'rgba(167, 139, 250, 0.3)', itemText: '#c4b5fd', itemBorder: 'rgba(167, 139, 250, 0.3)' }
+            }
         ];
 
         // Helper to change accent color of UI
@@ -733,11 +759,68 @@
             }
 
             // Re-render details list when banner changes (if pool changes per banner - currently static but good practice)
-            renderDetailsList();
+            // Se o modal estiver aberto, atualizar o tema também
+            const detailsModal = document.getElementById('details-modal');
+            if (detailsModal && !detailsModal.classList.contains('hidden')) {
+                applyModalTheme();
+                renderDetailsList();
+            }
         }
 
         // --- DETAILS MODAL LOGIC ---
+        function applyModalTheme() {
+            const theme = MODAL_THEMES[activeBannerIndex] || MODAL_THEMES[0];
+            const container = document.getElementById('modal-container');
+            const header = document.getElementById('modal-header');
+            const prefix = document.getElementById('modal-prefix');
+            const grandTitle = document.getElementById('modal-grand-title');
+            const mediumTitle = document.getElementById('modal-medium-title');
+            const basicTitle = document.getElementById('modal-basic-title');
+            const modalContent = container.querySelector('.custom-scrollbar');
+
+            // Aplicar cor de fundo e borda do container principal
+            container.style.backgroundColor = theme.bg;
+            // Converter hex para rgba para aplicar opacidade
+            const hex = theme.border.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            container.style.borderColor = `rgba(${r}, ${g}, ${b}, ${theme.borderOpacity})`;
+
+            // Aplicar borda do header
+            header.style.borderBottomColor = theme.headerBorder;
+
+            // Aplicar cor do prefixo
+            prefix.style.color = theme.accent;
+
+            // Aplicar cores dos títulos das seções
+            grandTitle.style.color = theme.grandPrize.text;
+            grandTitle.style.borderBottomColor = theme.grandPrize.border;
+            
+            mediumTitle.style.color = theme.rarePrize.text;
+            mediumTitle.style.borderBottomColor = theme.rarePrize.border;
+            
+            basicTitle.style.color = theme.basicPrize.text;
+            basicTitle.style.borderBottomColor = theme.basicPrize.border;
+
+            // Atualizar cor da scrollbar do modal
+            if (modalContent) {
+                const style = document.createElement('style');
+                style.id = 'modal-scrollbar-style';
+                const existingStyle = document.getElementById('modal-scrollbar-style');
+                if (existingStyle) existingStyle.remove();
+                
+                style.textContent = `
+                    #modal-container .custom-scrollbar::-webkit-scrollbar-thumb {
+                        background: ${theme.accent}80 !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
         function openDetailsModal() {
+            applyModalTheme(); // Aplicar tema antes de abrir
             document.getElementById('details-modal').classList.remove('hidden');
             document.getElementById('details-modal').classList.add('flex');
             renderDetailsList();
@@ -749,19 +832,22 @@
         }
 
         function renderDetailsList() {
+            const theme = MODAL_THEMES[activeBannerIndex] || MODAL_THEMES[0];
+            
             // Function to create a small list item
             const createListItem = (item, type) => {
-                let colorClass = "text-blue-300 border-blue-500/30";
-                if(type === 'grand') colorClass = "text-yellow-300 border-yellow-500/30";
-                if(type === 'medium') colorClass = "text-purple-300 border-purple-500/30";
+                let prizeTheme;
+                if(type === 'grand') prizeTheme = theme.grandPrize;
+                else if(type === 'medium') prizeTheme = theme.rarePrize;
+                else prizeTheme = theme.basicPrize;
 
                 return `
-                    <div class="flex items-center gap-3 p-3 border ${colorClass} bg-black/40 hover:bg-white/5 transition">
+                    <div class="flex items-center gap-3 p-3 border bg-black/40 hover:bg-white/5 transition" style="color: ${prizeTheme.itemText}; border-color: ${prizeTheme.itemBorder};">
                         <div class="w-12 h-12 shrink-0 overflow-hidden border border-white/10 bg-black">
                             <img src="${item.img}" class="w-full h-full object-contain">
                         </div>
                         <div class="overflow-hidden">
-                            <p class="font-mono text-xs font-bold truncate ${type === 'grand' ? 'text-yellow-400' : (type === 'medium' ? 'text-purple-400' : 'text-blue-400')}">${item.name}</p>
+                            <p class="font-mono text-xs font-bold truncate" style="color: ${prizeTheme.text};">${item.name}</p>
                             <p class="text-[10px] text-gray-500">ID: ${Math.floor(Math.random()*9000)+1000}</p>
                         </div>
                     </div>
