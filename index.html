@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Luck Gacha - Watch Dogs Style</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Rajdhani & Share Tech Mono for that hacker vibe -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Quando nenhum banner estiver selecionado, UI em PB (branco) */
+            --accent-color: #ffffff;
+        }
+
+        /* Custom Styles & Animations */
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #1b191c;
+            background-image: url('assets/BG/BG.png'); /* BG geral */
+            background-size: cover;
+            background-position: center;
+            color: #e0f2fe;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        
+        .font-mono {
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        /* Scanline effect */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.3;
+        }
+
+        /* BG Triangles canvas */
+        #bg-triangles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        /* Neon Glows */
+        .neon-green { box-shadow: 0 0 10px var(--accent-color), 0 0 20px var(--accent-color); }
+        .text-neon-green { text-shadow: 0 0 5px var(--accent-color); color: var(--accent-color); }
+        
+        .neon-purple { box-shadow: 0 0 10px #d946ef, 0 0 20px #d946ef; }
+        .text-neon-purple { text-shadow: 0 0 5px #d946ef; color: #d946ef; }
+
+        .neon-gold { box-shadow: 0 0 10px #facc15, 0 0 20px #facc15; }
+        .text-neon-gold { text-shadow: 0 0 5px #facc15; color: #facc15; }
+
+        /* Glitch Text Effect (Simple CSS) */
+        .glitch {
+            position: relative;
+        }
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+        }
+        .glitch::before { left: 2px; text-shadow: -1px 0 red; clip: rect(24px, 550px, 90px, 0); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
+        .glitch::after { left: -2px; text-shadow: -1px 0 blue; clip: rect(85px, 550px, 140px, 0); animation: glitch-anim 2.5s infinite linear alternate-reverse; }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(11px, 9999px, 34px, 0); }
+            20% { clip: rect(87px, 9999px, 96px, 0); }
+            40% { clip: rect(23px, 9999px, 6px, 0); }
+            60% { clip: rect(45px, 9999px, 78px, 0); }
+            80% { clip: rect(9px, 9999px, 14px, 0); }
+            100% { clip: rect(66px, 9999px, 33px, 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(66px, 9999px, 21px, 0); }
+            20% { clip: rect(12px, 9999px, 56px, 0); }
+            40% { clip: rect(88px, 9999px, 34px, 0); }
+            60% { clip: rect(4px, 9999px, 98px, 0); }
+            80% { clip: rect(55px, 9999px, 12px, 0); }
+            100% { clip: rect(33px, 9999px, 66px, 0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: var(--accent-color); }
+        
+        /* Modal Styles */
+        .modal-backdrop {
+            backdrop-filter: blur(5px);
+        }
+        
+        /* Item Reveal Animation */
+        .reveal-item {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            transform: scale(0.5);
+        }
+        @keyframes popIn {
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        /* Glitch Image Effect (Specific for Banner) */
+        .glitch-img-container {
+            position: relative;
+            display: inline-block;
+            overflow: hidden;
+        }
+
+        .glitch-img-container img {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Glitch Layers (Clone of the image) */
+        .glitch-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('assets/banners/26.11.25_Artist_Cache.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0;
+            z-index: 15;
+            pointer-events: none;
+            mix-blend-mode: hard-light;
+        }
+
+        .glitch-layer:nth-child(2) {
+            animation: glitch-anim-img-1 4s infinite linear alternate-reverse;
+            background-position: center;
+        }
+        
+        .glitch-layer:nth-child(3) {
+            animation: glitch-anim-img-2 3s infinite linear alternate-reverse;
+            background-position: center;
+        }
+
+        @keyframes glitch-anim-img-1 {
+            0% { opacity: 0; clip-path: inset(20% 0 80% 0); transform: translate(-2px, 0); filter: hue-rotate(90deg); }
+            2% { opacity: 1; clip-path: inset(20% 0 80% 0); transform: translate(-2px, 0); }
+            4% { opacity: 0; clip-path: inset(20% 0 80% 0); }
+            
+            20% { opacity: 0; clip-path: inset(60% 0 10% 0); transform: translate(2px, 0); filter: hue-rotate(-90deg); }
+            22% { opacity: 1; clip-path: inset(60% 0 10% 0); transform: translate(2px, 0); }
+            24% { opacity: 0; clip-path: inset(60% 0 10% 0); }
+            
+            60% { opacity: 0; clip-path: inset(10% 0 50% 0); transform: translate(-2px, 2px); }
+            62% { opacity: 1; clip-path: inset(10% 0 50% 0); transform: translate(-2px, 2px); }
+            64% { opacity: 0; clip-path: inset(10% 0 50% 0); }
+            100% { opacity: 0; }
+        }
+
+        @keyframes glitch-anim-img-2 {
+            0% { opacity: 0; clip-path: inset(10% 0 60% 0); transform: translate(2px, -2px); filter: invert(0.2); }
+            2% { opacity: 1; clip-path: inset(10% 0 60% 0); transform: translate(2px, -2px); }
+            4% { opacity: 0; clip-path: inset(10% 0 60% 0); }
+
+            40% { opacity: 0; clip-path: inset(40% 0 20% 0); transform: translate(-2px, 2px); }
+            42% { opacity: 1; clip-path: inset(40% 0 20% 0); transform: translate(-2px, 2px); }
+            44% { opacity: 0; clip-path: inset(40% 0 20% 0); }
+            
+            80% { opacity: 0; clip-path: inset(80% 0 5% 0); transform: translate(2px, 0); }
+            82% { opacity: 1; clip-path: inset(80% 0 5% 0); transform: translate(2px, 0); }
+            84% { opacity: 0; clip-path: inset(80% 0 5% 0); }
+            100% { opacity: 0; }
+        }
+
+        /* Hard Glitch Entry Animation */
+        .glitch-entry-anim {
+            animation: hard-glitch 0.4s steps(4) forwards; /* Steps creates that robotic/stuttery feel */
+            transform-origin: center;
+        }
+
+        @keyframes hard-glitch {
+            0% { 
+                opacity: 0;
+                clip-path: inset(50% 0 30% 0); 
+                transform: translate(-10px, 5px) scale(1.2);
+                filter: saturate(3) hue-rotate(90deg) contrast(2);
+            }
+            20% { 
+                opacity: 1;
+                clip-path: inset(10% 0 60% 0);
+                transform: translate(10px, -5px) scale(0.9);
+                filter: saturate(2) hue-rotate(-90deg) invert(0.1);
+            }
+            40% { 
+                clip-path: inset(80% 0 5% 0);
+                transform: translate(-5px, 0);
+                filter: saturate(1.5) hue-rotate(45deg);
+            }
+            60% { 
+                clip-path: inset(0 0 0 0);
+                transform: translate(5px, 2px);
+                filter: brightness(1.5);
+            }
+            80% { 
+                transform: translate(-2px, -2px);
+            }
+            100% { 
+                opacity: 1;
+                clip-path: inset(0 0 0 0);
+                transform: translate(0, 0) scale(1);
+                filter: none;
+            }
+        }
+
+        /* Silhouette Reveal Animation */
+        .silhouette-reveal {
+            animation: silhouetteAnim 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            filter: brightness(0) drop-shadow(0 0 10px var(--item-shadow-color, rgba(255,255,255,0.5))); 
+        }
+        @keyframes silhouetteAnim {
+            0% { filter: brightness(0) drop-shadow(0 0 5px var(--item-shadow-color)); transform: scale(0.9); }
+            40% { filter: brightness(0) drop-shadow(0 0 20px var(--item-shadow-color)); transform: scale(0.95); } 
+            100% { filter: brightness(1) drop-shadow(0 0 15px var(--item-shadow-color)); transform: scale(1); } 
+        }
+
+        /* Transition Fade Overlay */
+        #fade-overlay {
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        /* Cyber Particles */
+        .cyber-particle {
+            position: absolute;
+            background: transparent;
+            border: 1px solid currentColor;
+            opacity: 0;
+            animation: floatUp 3s linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Tech Info Box */
+        .tech-info-box {
+            background: linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 80%, transparent 100%);
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+            border-left: 4px solid; 
+        }
+
+        .credit-skull {
+            width: 1.5rem;
+            height: 1.5rem;
+            object-fit: contain;
+            filter: none; /* deixa a arte exatamente como está no arquivo */
+        }
+
+        .banner-border {
+            border: 2px solid var(--accent-color);
+        }
+
+        /* Ajuste fino da posição das thumbs dos banners (mostrar mais o topo) */
+        .banner-thumb {
+            object-position: center 20%;
+        }
+
+        /* Credits panel follows accent color */
+        .credits-border {
+            border-color: var(--accent-color);
+        }
+
+        .credits-label {
+            color: var(--accent-color);
+        }
+
+        .credits-divider {
+            background-color: var(--accent-color);
+            opacity: 0.3;
+        }
+
+        /* Override Tailwind green to use accent color */
+        .text-green-500 { color: var(--accent-color) !important; }
+        .border-green-500 { border-color: var(--accent-color) !important; }
+        .bg-green-500 { background-color: var(--accent-color) !important; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col relative">
+
+    <!-- Fade Transition Overlay -->
+    <div id="fade-overlay" class="fixed inset-0 bg-black z-[60] opacity-0"></div>
+
+    <!-- BG Triangles (dynamic mesh) -->
+    <canvas id="bg-triangles"></canvas>
+
+    <div class="scanlines"></div>
+
+    <!-- STATE 1: BANNER SELECTOR & HOME -->
+    <div id="home-screen" class="flex h-full w-full relative z-10">
+        
+        <!-- Left Sidebar: Banner List -->
+        <div class="w-1/4 h-full bg-black/90 border-r border-green-500 flex flex-col p-4 gap-4 z-20">
+            <h2 class="text-2xl font-bold text-neon-green mb-4 font-mono glitch" data-text="BANNER SELECTOR">BANNER SELECTOR</h2>
+            
+            <!-- Banner Option 1 -->
+            <div onclick="selectBanner(0)" class="banner-option cursor-pointer border transition p-2 relative">
+                <div class="absolute top-0 left-0 w-1 h-full bg-green-500 indicator hidden"></div>
+                <!-- Usando a mesma imagem como thumb por enquanto -->
+                <img src="assets/banners/26.11.25_Artist_Cache.png" class="w-full h-24 object-cover mb-2 opacity-80 banner-thumb">
+                <h3 class="text-sm font-bold text-white">ARTIST CACHE</h3>
+            </div>
+
+            <!-- Banner Option 2 (Concept Arsenal) -->
+            <div onclick="selectBanner(1)" class="banner-option cursor-pointer border transition p-2 relative">
+                <div class="absolute top-0 left-0 w-1 h-full bg-green-500 indicator hidden"></div>
+                <img src="assets/banners/26.11.25_Concept_Arsenal.png" class="w-full h-24 object-cover mb-2 opacity-80 banner-thumb">
+                <h3 class="text-sm font-bold text-white">CONCEPT ARSENAL</h3>
+            </div>
+
+            <!-- Banner Option 3 (Coming Soon - not clickable, UI cinza) -->
+            <div class="cursor-not-allowed border border-gray-700 bg-black/60 transition p-2 relative opacity-60 select-none">
+                <div class="absolute top-0 left-0 w-1 h-full bg-gray-700/80"></div>
+                <img src="assets/banners/26.11.25_coming_soon.png" class="w-full h-24 object-cover mb-2 opacity-80 object-center">
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest text-center">COMING SOON</h3>
+            </div>
+        </div>
+
+        <!-- Main Content: Active Banner Display -->
+        <div class="w-3/4 h-full relative flex flex-col">
+            <!-- Header (Credits) -->
+            <div class="absolute top-6 right-8 z-30 flex items-center gap-4 bg-black/80 border credits-border px-4 py-2 rounded-sm backdrop-blur-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <img src="assets/UI/Skull_White.png" alt="Credits" class="credit-skull">
+                    </div>
+                    <span class="credits-label font-mono text-sm tracking-wider">CREDITS:</span>
+                    <span id="user-credits" class="text-white font-bold font-mono text-lg">XXX</span>
+                </div>
+                <!-- Optional: Second currency style -->
+                <div class="w-[1px] h-6 mx-2 credits-divider"></div>
+                <div class="text-xs text-gray-400 font-mono cursor-pointer hover:text-white transition">+ ADD FUNDS</div>
+            </div>
+            
+            <div class="p-8 text-center relative z-10 flex flex-col h-full justify-between">
+                <!-- Banner Image Area -->
+                <div class="flex-1 flex items-center justify-center p-4 relative">
+                    <!-- Main Banner Image with Glitch Container -->
+                    <div class="glitch-img-container relative">
+                        <img id="current-banner-img" src="assets/banners/26.11.25_Artist_Cache.png" class="max-h-[78vh] w-auto banner-border relative z-10">
+                        <!-- Glitch Layers -->
+                        <div class="glitch-layer"></div>
+                        <div class="glitch-layer"></div>
+                    </div>
+                    
+                    <!-- Decorators -->
+                </div>
+
+                <!-- Footer / Pull Buttons -->
+                <div class="flex justify-between items-end pb-8 px-12">
+                    <!-- Details Button (Left) -->
+                    <button onclick="openDetailsModal()" class="group flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-300">
+                        <div class="w-8 h-8 border border-current flex items-center justify-center group-hover:bg-white/10 group-hover:shadow-[0_0_10px_rgba(255,255,255,0.3)] transition-all">
+                            <span class="font-mono text-lg">i</span>
+                        </div>
+                        <span class="font-mono text-sm tracking-widest group-hover:translate-x-1 transition-transform">[ DETAILS ]</span>
+                    </button>
+
+                    <!-- Pull Buttons (Right) -->
+                    <div class="flex gap-4">
+                        <button onclick="startGacha(1)" class="bg-black border-2 border-green-500 text-green-500 px-5 py-2.5 text-xl font-bold hover:bg-green-500 hover:text-black transition duration-300 uppercase">
+                            <span class="block">PULL x1</span>
+                        </button>
+                        <button id="pull-main-btn" onclick="startGacha(5)" class="bg-green-500 text-black border-2 border-green-500 px-5 py-2.5 text-xl font-bold hover:bg-white hover:border-white transition duration-300 uppercase">
+                            <span class="block">PULL x5</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- STATE 2: VIDEO ANIMATION -->
+    <div id="video-screen" class="fixed inset-0 z-50 bg-black flex items-center justify-center hidden">
+        <video id="gacha-video" class="w-full h-full object-cover">
+            <source src="assets/video/Animation.mp4" type="video/mp4">
+            Seu navegador não suporta vídeo.
+        </video>
+        <button onclick="skipAnimation()" class="absolute top-10 right-10 text-white/50 hover:text-white border border-white/30 px-4 py-2 text-sm uppercase z-50">Skip >></button>
+    </div>
+
+    <!-- STATE 3: SINGLE ITEM REVEAL (GENSHIN + WATCH DOGS STYLE) -->
+    <div id="single-reveal-screen" class="fixed inset-0 z-50 bg-black hidden items-center justify-center cursor-pointer overflow-hidden" onclick="nextItem()">
+        <!-- Background Dynamic Glow -->
+        <div id="reveal-bg-glow" class="absolute inset-0 opacity-30 bg-gradient-radial from-blue-900 to-black transition-colors duration-500 z-0"></div>
+        
+        <!-- Particles Container -->
+        <div id="particles-container" class="absolute inset-0 z-0 pointer-events-none"></div>
+
+        <!-- Content Wrapper (Grid Layout) -->
+        <div class="relative z-10 w-full max-w-7xl px-10 flex items-center justify-between h-full">
+            
+            <!-- Left Side: Info Box -->
+            <div id="info-panel" class="w-1/3 opacity-0 transform -translate-x-20 transition-all duration-700 flex flex-col justify-center z-20">
+                <!-- Tech Box -->
+                <div id="tech-box-border" class="tech-info-box p-8 border-l-4 border-white text-left relative">
+                    <!-- Decorative Header -->
+                    <div class="text-[10px] font-mono text-white/50 mb-2 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-current"></span> SYSTEM_ACQUISITION // VERIFIED
+                    </div>
+                    
+                    <!-- Item Name -->
+                    <h2 id="reveal-name" class="text-5xl font-black text-white uppercase tracking-tighter font-mono mb-4 leading-tight break-all drop-shadow-md">
+                        ITEM NAME
+                    </h2>
+                    
+                    <!-- Stars -->
+                    <div id="reveal-stars" class="text-3xl text-yellow-400 tracking-widest mb-4">★★★★★</div>
+                    
+                    <!-- Decorative Bar code / Lines -->
+                    <div class="w-full h-1 bg-white/20 mb-1">
+                        <div id="loading-bar" class="h-full bg-white w-0 transition-all duration-1000"></div>
+                    </div>
+                    <div class="flex justify-between text-[9px] font-mono text-white/40">
+                        <span>ID: 8492-XJ</span>
+                        <span>DATA_SIZE: 420TB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Image Display -->
+            <div class="w-2/3 h-full flex items-center justify-center relative z-10 pl-10">
+                <!-- The Image itself -->
+                <img id="reveal-img" src="" class="max-h-[85vh] w-auto object-contain splash-appear drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter transition-all duration-500">
+            </div>
+        </div>
+
+        <div class="absolute bottom-10 text-gray-500 text-sm animate-bounce font-mono z-20">[ CLICK TO CONTINUE_ ]</div>
+        
+        <button onclick="event.stopPropagation(); finishReveal();" class="absolute top-10 right-10 border border-white/30 text-white/50 hover:text-white px-4 py-2 text-xs uppercase z-50 bg-black/50 backdrop-blur">Skip All >></button>
+    </div>
+
+    <!-- STATE 4: RESULTS SUMMARY SCREEN -->
+    <div id="results-screen" class="fixed inset-0 z-40 bg-gradient-to-b from-gray-900 to-black hidden flex-col items-center justify-center overflow-y-auto py-10">
+        
+        <h2 class="text-4xl text-white font-bold mb-8 tracking-widest uppercase font-mono text-center mt-10">Acquisition Summary</h2>
+        
+        <!-- Items Grid -->
+        <div id="items-grid" class="flex gap-4 justify-center flex-wrap max-w-7xl px-4">
+            <!-- Items will be injected here via JS -->
+        </div>
+
+        <div class="my-12 flex gap-4 pb-10">
+             <button onclick="resetToHome()" class="border border-gray-500 text-gray-300 px-8 py-3 hover:border-white hover:text-white transition uppercase">Close</button>
+             <button onclick="replayGacha()" class="bg-white text-black px-8 py-3 font-bold hover:bg-gray-200 transition uppercase">Pull Again</button>
+        </div>
+    </div>
+
+    <!-- STATE 5: DETAILS MODAL -->
+    <div id="details-modal" class="fixed inset-0 z-[70] bg-black/80 modal-backdrop hidden flex-col items-center justify-center p-10">
+        <div class="bg-[#1b191c] border border-green-500/50 w-full max-w-5xl h-[80vh] flex flex-col relative shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+            <!-- Modal Header -->
+            <div class="bg-black/50 p-6 border-b border-green-500/30 flex justify-between items-center">
+                <h2 class="text-2xl font-mono text-white tracking-widest flex items-center gap-3">
+                    <span class="text-green-500">>></span> DATABASE_CONTENTS // ALL_ITEMS
+                </h2>
+                <button onclick="closeDetailsModal()" class="text-gray-500 hover:text-red-500 hover:scale-110 transition text-2xl font-bold font-mono">X</button>
+            </div>
+            
+            <!-- Modal Content (Scrollable) -->
+            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
+                <div class="scanlines absolute inset-0 pointer-events-none opacity-10"></div>
+                
+                <!-- Grand Prize Section -->
+                <div class="mb-10">
+                    <h3 class="text-yellow-400 font-black text-3xl mb-6 border-b border-yellow-400/30 pb-2 flex justify-between">
+                        GRAND PRIZE <span class="text-sm font-mono font-normal opacity-70 self-end">PROBABILITY: 10%</span>
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="details-grand-list"></div>
+                </div>
+
+                <!-- Medium Prize Section -->
+                <div class="mb-10">
+                    <h3 class="text-purple-400 font-black text-3xl mb-6 border-b border-purple-400/30 pb-2 flex justify-between">
+                        RARE PRIZE <span class="text-sm font-mono font-normal opacity-70 self-end">PROBABILITY: 30%</span>
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="details-medium-list"></div>
+                </div>
+
+                <!-- Basic Prize Section -->
+                <div>
+                    <h3 class="text-blue-400 font-black text-3xl mb-6 border-b border-blue-400/30 pb-2 flex justify-between">
+                        BASIC PRIZE <span class="text-sm font-mono font-normal opacity-70 self-end">PROBABILITY: 60%</span>
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="details-basic-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="Database/itens_data.js"></script>
+    <script>
+        // --- CONFIGURATION ---
+        
+        // Definindo probabilidades
+        const PROBABILITIES = {
+            grand: 0.10, // 10%
+            medium: 0.30, // 30%
+            basic: 0.60  // 60%
+        };
+
+        // Banner images (main display) for each option
+        const BANNERS = [
+            "assets/banners/26.11.25_Artist_Cache.png",
+            "assets/banners/26.11.25_Concept_Arsenal.png"
+        ];
+
+        // Accent color per banner (fallback PB/white when nenhum selecionado)
+        const BANNER_ACCENTS = [
+            "#00ff84", // Banner 0 - Artist Cache
+            "#a200ff"  // Banner 1 - Concept Arsenal
+        ];
+
+        // Helper to change accent color of UI
+        function applyTheme(color) {
+            document.documentElement.style.setProperty('--accent-color', color);
+
+            // Atualiza outline e glow do banner principal
+            const mainBannerImg = document.getElementById('current-banner-img');
+            if (mainBannerImg) {
+                mainBannerImg.style.boxShadow = `0 0 30px ${color}40`;
+            }
+
+            // Atualiza glow do botão principal de Pull x5
+            const pullMainBtn = document.getElementById('pull-main-btn');
+            if (pullMainBtn) {
+                pullMainBtn.style.boxShadow = `0 0 20px ${color}80`;
+            }
+        }
+
+        // Base de dados REAL dos seus arquivos
+        // Agora carregada via items_data.js
+        // const ITEM_DATABASE = { ... };
+
+        let currentPullCount = 0;
+        let activeBannerIndex = 0;
+        
+        // State for reveal sequence
+        let pendingItems = [];
+        let currentRevealIndex = 0;
+
+        // --- BACKGROUND TRIANGLES (dynamic mesh) ---
+        const triCanvas = document.getElementById('bg-triangles');
+        const triCtx = triCanvas ? triCanvas.getContext('2d') : null;
+
+        const TRI_CONFIG = {
+            rows: 2,       // ainda menos linhas -> triângulos bem maiores
+            cols: 4,       // ainda menos colunas -> malha mais ampla
+            amplitude: 90, // deslocamento maior dos vértices
+            speed: 0.0002  // animação mais lenta
+        };
+
+        let triPoints = [];
+        let triStartTime = performance.now();
+
+        function initTriangles() {
+            if (!triCanvas || !triCtx) return;
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            triCanvas.width = w;
+            triCanvas.height = h;
+
+            triPoints = [];
+            const { rows, cols } = TRI_CONFIG;
+            const margin = 0.18; // gera pontos um pouco fora da tela para continuidade
+            const spanX = 1 + margin * 2;
+            const spanY = 1 + margin * 2;
+            for (let y = 0; y <= rows; y++) {
+                for (let x = 0; x <= cols; x++) {
+                    const px = (-margin + (x / cols) * spanX) * w;
+                    const py = (-margin + (y / rows) * spanY) * h;
+                    const phase = Math.random() * Math.PI * 2;
+                    triPoints.push({ baseX: px, baseY: py, phase });
+                }
+            }
+        }
+
+        function getAccentColor() {
+            const cs = getComputedStyle(document.documentElement);
+            const c = cs.getPropertyValue('--accent-color').trim();
+            return c || '#00ff84';
+        }
+
+        function drawTriangles(time) {
+            if (!triCanvas || !triCtx || !triPoints.length) return;
+            const w = triCanvas.width;
+            const h = triCanvas.height;
+            triCtx.clearRect(0, 0, w, h);
+
+            const color = getAccentColor();
+            triCtx.strokeStyle = color;
+            triCtx.lineWidth = 0.7;
+            triCtx.globalAlpha = 0.35;
+
+            const { rows, cols, amplitude, speed } = TRI_CONFIG;
+            const t = (time - triStartTime);
+
+            // Pré-calcula posições animadas
+            const animated = triPoints.map(p => {
+                const offset = Math.sin(t * speed + p.phase);
+                const x = p.baseX + offset * amplitude;
+                const y = p.baseY + Math.cos(t * speed * 1.3 + p.phase) * amplitude * 0.6;
+                return { x, y };
+            });
+
+            const idx = (x, y) => y * (cols + 1) + x;
+
+            triCtx.beginPath();
+            for (let y = 0; y < TRI_CONFIG.rows; y++) {
+                for (let x = 0; x < TRI_CONFIG.cols; x++) {
+                    const p0 = animated[idx(x, y)];
+                    const p1 = animated[idx(x + 1, y)];
+                    const p2 = animated[idx(x, y + 1)];
+                    const p3 = animated[idx(x + 1, y + 1)];
+
+                    // Triângulo 1: p0 -> p1 -> p3
+                    triCtx.moveTo(p0.x, p0.y);
+                    triCtx.lineTo(p1.x, p1.y);
+                    triCtx.lineTo(p3.x, p3.y);
+
+                    // Triângulo 2: p0 -> p3 -> p2
+                    triCtx.moveTo(p0.x, p0.y);
+                    triCtx.lineTo(p3.x, p3.y);
+                    triCtx.lineTo(p2.x, p2.y);
+                }
+            }
+            triCtx.stroke();
+            triCtx.globalAlpha = 1;
+        }
+
+        function animateTriangles(time) {
+            drawTriangles(time || performance.now());
+            requestAnimationFrame(animateTriangles);
+        }
+
+        if (triCanvas && triCtx) {
+            initTriangles();
+            window.addEventListener('resize', initTriangles);
+            requestAnimationFrame(animateTriangles);
+        }
+
+        function hexToRgba(hex, alpha) {
+            if (!hex) return `rgba(255,255,255,${alpha})`;
+            hex = hex.replace('#','');
+            if (hex.length === 3) {
+                hex = hex.split('').map(c => c + c).join('');
+            }
+            const bigint = parseInt(hex, 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // --- LOGIC ---
+
+        // Persistent Inventory (coleção do usuário)
+        let inventory = JSON.parse(localStorage.getItem('gacha_inventory')) || [];
+
+        function saveInventory() {
+            localStorage.setItem('gacha_inventory', JSON.stringify(inventory));
+        }
+
+        function selectBanner(index) {
+            activeBannerIndex = index;
+            const options = document.querySelectorAll('.banner-option');
+            
+            const bannerTitles = ["ARTIST CACHE", "CONCEPT ARSENAL"];
+            
+            options.forEach((opt, i) => {
+                const indicator = opt.querySelector('.indicator');
+                const color = BANNER_ACCENTS[i] || '#ffffff';
+
+                // Cor de borda e indicador de cada caixa segue a cor da UI do banner
+                opt.style.borderColor = color;
+                if (indicator) {
+                    indicator.style.backgroundColor = color;
+                }
+
+                if (i === index) {
+                    indicator.classList.remove('hidden');
+                    opt.style.backgroundColor = hexToRgba(color, 0.16);
+                    opt.style.boxShadow = `0 0 18px ${hexToRgba(color, 0.55)}`;
+                    
+                    // Removido atualização de títulos pois os elementos foram removidos da UI
+                    // document.getElementById('main-title').innerText = bannerTitles[index];
+                    // document.getElementById('main-title').setAttribute('data-text', bannerTitles[index]);
+                    // document.getElementById('grand-prize-name').innerText = bannerTitles[index];
+                    
+                } else {
+                    indicator.classList.add('hidden');
+                    opt.style.backgroundColor = 'transparent';
+                    opt.style.boxShadow = 'none';
+                }
+            });
+
+            // Atualiza imagem principal do banner
+            const mainBannerImg = document.getElementById('current-banner-img');
+            if (BANNERS[index]) {
+                mainBannerImg.src = BANNERS[index];
+            }
+
+            // Atualiza imagem de glitch de fundo
+            const glitchLayers = document.querySelectorAll('.glitch-layer');
+            glitchLayers.forEach(layer => {
+                if (BANNERS[index]) {
+                    layer.style.backgroundImage = `url('${BANNERS[index]}')`;
+                }
+            });
+
+            // Muda tema da UI baseado no banner selecionado
+            if (BANNER_ACCENTS[index]) {
+                applyTheme(BANNER_ACCENTS[index]);
+            } else {
+                applyTheme('#ffffff'); // fallback PB
+            }
+
+            // Re-render details list when banner changes (if pool changes per banner - currently static but good practice)
+            renderDetailsList();
+        }
+
+        // --- DETAILS MODAL LOGIC ---
+        function openDetailsModal() {
+            document.getElementById('details-modal').classList.remove('hidden');
+            document.getElementById('details-modal').classList.add('flex');
+            renderDetailsList();
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('details-modal').classList.add('hidden');
+            document.getElementById('details-modal').classList.remove('flex');
+        }
+
+        function renderDetailsList() {
+            // Function to create a small list item
+            const createListItem = (item, type) => {
+                let colorClass = "text-blue-300 border-blue-500/30";
+                if(type === 'grand') colorClass = "text-yellow-300 border-yellow-500/30";
+                if(type === 'medium') colorClass = "text-purple-300 border-purple-500/30";
+
+                return `
+                    <div class="flex items-center gap-3 p-3 border ${colorClass} bg-black/40 hover:bg-white/5 transition">
+                        <div class="w-12 h-12 shrink-0 overflow-hidden border border-white/10 bg-black">
+                            <img src="${item.img}" class="w-full h-full object-contain">
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="font-mono text-xs font-bold truncate ${type === 'grand' ? 'text-yellow-400' : (type === 'medium' ? 'text-purple-400' : 'text-blue-400')}">${item.name}</p>
+                            <p class="text-[10px] text-gray-500">ID: ${Math.floor(Math.random()*9000)+1000}</p>
+                        </div>
+                    </div>
+                `;
+            };
+
+            // Render Grand
+            const grandContainer = document.getElementById('details-grand-list');
+            const bannerData = ITEM_DATABASE[activeBannerIndex];
+            if(bannerData && bannerData.grand) {
+                grandContainer.innerHTML = bannerData.grand.map(i => createListItem(i, 'grand')).join('');
+            }
+
+            // Render Medium
+            const mediumContainer = document.getElementById('details-medium-list');
+            if(bannerData && bannerData.medium) {
+                mediumContainer.innerHTML = bannerData.medium.map(i => createListItem(i, 'medium')).join('');
+            }
+
+            // Render Basic
+            const basicContainer = document.getElementById('details-basic-list');
+            if(bannerData && bannerData.basic) {
+                basicContainer.innerHTML = bannerData.basic.map(i => createListItem(i, 'basic')).join('');
+            }
+        }
+
+        function startGacha(amount) {
+            // 0. Fade to Black Transition
+            const fadeOverlay = document.getElementById('fade-overlay');
+            fadeOverlay.style.opacity = '1';
+
+            // Wait for fade out (500ms)
+            setTimeout(() => {
+                currentPullCount = amount;
+                
+                // Generate items
+                pendingItems = [];
+                // Lista de nomes já usados neste pull para evitar repetidos
+                let usedNames = [];
+
+                for(let i=0; i<amount; i++) {
+                    const item = rollItem(usedNames);
+                    pendingItems.push(item);
+                    if (item.name !== "Error") {
+                        usedNames.push(item.name);
+                    }
+                }
+
+                // Guaranteed Rare Logic (Pull x5)
+                if (amount === 5) {
+                    const hasRareOrBetter = pendingItems.some(item => item.type === 'grand' || item.type === 'medium');
+                    if (!hasRareOrBetter) {
+                        pendingItems.pop(); 
+                        // Recalcula usados sem o último item
+                        usedNames = pendingItems.map(i => i.name);
+                        const guaranteed = rollGuaranteedItem(usedNames);
+                        pendingItems.push(guaranteed);
+                        if (guaranteed.name !== "Error") {
+                            usedNames.push(guaranteed.name);
+                        }
+                    }
+                }
+
+                currentRevealIndex = 0;
+
+                // 1. Hide Home
+                document.getElementById('home-screen').classList.add('hidden');
+                
+                // 2. Show Video Screen (still black due to overlay)
+                const videoScreen = document.getElementById('video-screen');
+                videoScreen.classList.remove('hidden');
+                
+                const video = document.getElementById('gacha-video');
+                video.currentTime = 0;
+                
+                // Fade In Video (Remove black overlay)
+                fadeOverlay.style.opacity = '0';
+                
+                video.play().catch(e => console.log("Autoplay prevented", e));
+
+                video.onended = () => {
+                    startRevealSequence();
+                };
+
+            }, 500);
+        }
+
+        // --- SOUND SYSTEM ---
+        const AUDIO = {
+            basic: new Audio('assets/SFX/Glitch 01.wav'),
+            medium: new Audio('assets/SFX/Glitch 02.wav'),
+            grand: new Audio('assets/SFX/Glitch 05.wav')
+        };
+
+        // Preload sounds
+        Object.values(AUDIO).forEach(s => s.load());
+
+        function playSound(type) {
+            const sound = AUDIO[type];
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Audio play failed", e));
+            }
+        }
+
+        function rollGuaranteedItem(usedNames = []) {
+            // Logic: We need a non-basic item.
+            // Ratio between Grand (10%) and Medium (30%) is 1:3.
+            // So there is a 25% chance of it being Grand, and 75% Medium.
+            const rand = Math.random();
+            let type = 'medium';
+            
+            if (rand < 0.25) { 
+                type = 'grand';
+            }
+
+            const bannerData = ITEM_DATABASE[activeBannerIndex];
+            if (!bannerData) return { name: "Guaranteed Reward", img: "", type: "medium" };
+            
+            const pool = bannerData[type];
+            if (!pool || pool.length === 0) return { name: "Guaranteed Reward", img: "", type: "medium" };
+            
+            // Filtra itens já usados neste pull
+            const available = pool.filter(item => !usedNames.includes(item.name));
+            const finalPool = available.length > 0 ? available : pool; // fallback se esgotar
+
+            const itemData = finalPool[Math.floor(Math.random() * finalPool.length)];
+            return { ...itemData, type };
+        }
+        
+        function skipAnimation() {
+            const video = document.getElementById('gacha-video');
+            video.pause();
+            startRevealSequence();
+        }
+
+        // --- NEW: REVEAL LOGIC ---
+
+        function startRevealSequence() {
+            document.getElementById('video-screen').classList.add('hidden');
+            const revealScreen = document.getElementById('single-reveal-screen');
+            revealScreen.classList.remove('hidden');
+            revealScreen.classList.add('flex');
+            
+            // Add Cyber Grid Background
+            revealScreen.classList.add('cyber-grid');
+            
+            showNextItem();
+        }
+
+        function showNextItem() {
+            if (currentRevealIndex >= pendingItems.length) {
+                finishReveal();
+                return;
+            }
+
+            const item = pendingItems[currentRevealIndex];
+            
+            // DOM Elements
+            const imgEl = document.getElementById('reveal-img');
+            const nameEl = document.getElementById('reveal-name');
+            const starsEl = document.getElementById('reveal-stars');
+            const bgGlow = document.getElementById('reveal-bg-glow');
+            const infoPanel = document.getElementById('info-panel');
+            const techBorder = document.getElementById('tech-box-border');
+            const loadingBar = document.getElementById('loading-bar');
+            const particlesContainer = document.getElementById('particles-container');
+
+            // 1. Reset Animations & State
+            imgEl.classList.remove('silhouette-reveal');
+            infoPanel.classList.remove('opacity-100', 'translate-x-0');
+            infoPanel.classList.add('opacity-0', '-translate-x-20');
+            loadingBar.style.width = '0%';
+            particlesContainer.innerHTML = ''; // Clear particles
+            
+            void imgEl.offsetWidth; // Reflow
+
+            // 2. Start Sequence
+            imgEl.classList.add('silhouette-reveal');
+            imgEl.src = item.img;
+            
+            // Show Info Panel with slight delay
+            setTimeout(() => {
+                infoPanel.classList.remove('opacity-0', '-translate-x-20');
+                infoPanel.classList.add('opacity-100', 'translate-x-0');
+                loadingBar.style.width = '100%';
+            }, 200);
+
+            // 3. Play Sound
+            playSound(item.type);
+
+            // 4. Text Decryption
+            scrambleText(nameEl, item.name);
+            
+            starsEl.innerText = getStars(item.type);
+            
+            // 5. Color & Style Logic
+            let baseColor = '#3b82f6'; // Blue
+            let shadowColor = 'rgba(59, 130, 246, 0.8)';
+
+            if (item.type === 'grand') {
+                baseColor = '#facc15'; // Gold
+                shadowColor = 'rgba(250, 204, 21, 0.8)';
+                
+                let sizeClass = "text-6xl";
+                if(item.name.length > 15) sizeClass = "text-4xl";
+                if(item.name.length > 25) sizeClass = "text-3xl";
+
+                nameEl.className = `${sizeClass} font-black text-yellow-400 uppercase tracking-tighter font-mono mb-4 leading-tight break-all drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]`;
+                bgGlow.className = "absolute inset-0 opacity-80 bg-gradient-radial from-yellow-600/40 via-black to-black transition-colors duration-500";
+                techBorder.style.borderLeftColor = baseColor;
+                techBorder.style.boxShadow = `inset 10px 0 20px -10px ${shadowColor}`;
+                
+            } else if (item.type === 'medium') {
+                baseColor = '#d946ef'; // Purple
+                shadowColor = 'rgba(217, 70, 239, 0.8)';
+                
+                let sizeClass = "text-5xl";
+                if(item.name.length > 15) sizeClass = "text-4xl";
+                if(item.name.length > 25) sizeClass = "text-3xl";
+
+                nameEl.className = `${sizeClass} font-black text-purple-400 uppercase tracking-tighter font-mono mb-4 leading-tight break-all drop-shadow-[0_0_10px_rgba(217,70,239,0.8)]`;
+                bgGlow.className = "absolute inset-0 opacity-70 bg-gradient-radial from-purple-700/40 via-black to-black transition-colors duration-500";
+                techBorder.style.borderLeftColor = baseColor;
+                techBorder.style.boxShadow = `inset 10px 0 20px -10px ${shadowColor}`;
+
+            } else {
+                let sizeClass = "text-5xl";
+                if(item.name.length > 15) sizeClass = "text-4xl";
+                if(item.name.length > 25) sizeClass = "text-3xl";
+
+                nameEl.className = `${sizeClass} font-black text-blue-400 uppercase tracking-tighter font-mono mb-4 leading-tight break-all`;
+                bgGlow.className = "absolute inset-0 opacity-50 bg-gradient-radial from-blue-800/40 via-black to-black transition-colors duration-500";
+                techBorder.style.borderLeftColor = baseColor;
+                techBorder.style.boxShadow = `inset 10px 0 20px -10px ${shadowColor}`;
+            }
+
+            // Apply Drop Shadow to Image (The "Neon Outline")
+            imgEl.style.filter = `drop-shadow(0 0 15px ${shadowColor}) brightness(0)`; // brightness(0) handled by animation class, but this sets the shadow color
+            
+            // Fix for animation: the keyframes toggle brightness, but we need the shadow to persist.
+            // The CSS animation 'silhouetteAnim' handles brightness. The inline filter handles shadow.
+            // We need to update the inline filter DYNAMICALLY during animation or set it so it combines.
+            // A simpler way is to put the shadow on a wrapper or use a specific class, but inline works if we are careful.
+            // Actually, the CSS animation overwrites 'filter'. We should inject a style block or use CSS variables.
+            // Let's use a CSS variable approach for the shadow color to avoid conflict.
+            
+            document.documentElement.style.setProperty('--item-shadow-color', shadowColor);
+            imgEl.style.filter = ''; // Clear inline to let class handle it with variable
+
+            // 6. Spawn Particles
+            spawnParticles(baseColor, 15);
+
+            // Prepare for next click
+            currentRevealIndex++;
+        }
+
+        function spawnParticles(color, count) {
+            const container = document.getElementById('particles-container');
+            for(let i=0; i<count; i++) {
+                const p = document.createElement('div');
+                p.classList.add('cyber-particle');
+                
+                // Random properties
+                const size = Math.random() * 10 + 5;
+                const left = Math.random() * 100;
+                const duration = Math.random() * 2 + 2;
+                const delay = Math.random() * 1;
+                
+                p.style.width = `${size}px`;
+                p.style.height = `${size}px`;
+                p.style.left = `${left}%`;
+                p.style.color = color;
+                p.style.animationDuration = `${duration}s`;
+                p.style.animationDelay = `${delay}s`;
+                
+                container.appendChild(p);
+            }
+        }
+
+        // Hacker Text Scramble Effect
+        function scrambleText(element, finalText) {
+            let iterations = 0;
+            const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;':";
+            
+            clearInterval(element.interval);
+            
+            element.interval = setInterval(() => {
+                element.innerText = finalText
+                .split("")
+                .map((letter, index) => {
+                    if(index < iterations) {
+                        return finalText[index];
+                    }
+                    return possible[Math.floor(Math.random() * possible.length)];
+                })
+                .join("");
+                
+                if(iterations >= finalText.length){ 
+                    clearInterval(element.interval);
+                }
+                
+                iterations += 1 / 2; // Speed of decryption
+            }, 30);
+        }
+
+        function nextItem() {
+            showNextItem();
+        }
+
+        function finishReveal() {
+            document.getElementById('single-reveal-screen').classList.add('hidden');
+            document.getElementById('single-reveal-screen').classList.remove('flex');
+            
+            // Save pending items to permanent inventory
+            pendingItems.forEach(item => {
+                if (item.name && item.name !== "Error" && !inventory.includes(item.name)) {
+                    inventory.push(item.name);
+                }
+            });
+            saveInventory();
+
+            showSummary();
+        }
+
+        function showSummary() {
+            const resultsScreen = document.getElementById('results-screen');
+            resultsScreen.classList.remove('hidden');
+            resultsScreen.classList.add('flex');
+            resultsScreen.classList.add('cyber-grid'); // Background Grid
+
+            const grid = document.getElementById('items-grid');
+            grid.innerHTML = ''; 
+
+            // Render Items Grid
+            pendingItems.forEach((item, index) => {
+                const el = createItemCard(item, index);
+                grid.appendChild(el);
+            });
+        }
+
+        function rollItem(usedNames = []) {
+            const rand = Math.random();
+            let type = 'basic';
+            
+            if (rand < PROBABILITIES.grand) {
+                type = 'grand';
+            } else if (rand < (PROBABILITIES.grand + PROBABILITIES.medium)) {
+                type = 'medium';
+            }
+
+            const bannerData = ITEM_DATABASE[activeBannerIndex];
+            if (!bannerData) return { name: "Error", img: "", type: "basic" };
+            
+            const pool = bannerData[type];
+            if (!pool || pool.length === 0) return { name: "Error", img: "", type: "basic" };
+            
+            // Filtra itens já usados neste pull
+            const available = pool.filter(item => !usedNames.includes(item.name));
+            const finalPool = available.length > 0 ? available : pool; // fallback se esgotar
+
+            const itemData = finalPool[Math.floor(Math.random() * finalPool.length)];
+            return { ...itemData, type };
+        }
+
+        function createItemCard(item, index) {
+            const div = document.createElement('div');
+            
+            let borderColor = 'border-blue-500';
+            let shadowColor = 'shadow-blue-500/50';
+            let bgGlow = 'bg-blue-900/20'; // More transparent
+            let textColor = 'text-blue-300';
+            let widthClass = 'w-40 h-64'; 
+            
+            if (item.type === 'grand') {
+                borderColor = 'border-yellow-400';
+                shadowColor = 'shadow-yellow-400/50';
+                bgGlow = 'bg-yellow-900/20';
+                textColor = 'text-yellow-300';
+                widthClass = 'w-48 h-72'; 
+            } else if (item.type === 'medium') {
+                borderColor = 'border-purple-500';
+                shadowColor = 'shadow-purple-500/50';
+                bgGlow = 'bg-purple-900/20';
+                textColor = 'text-purple-300';
+            }
+
+            // Using tech-card class for cut corners
+            div.className = `relative ${widthClass} border-l-2 border-r-2 ${borderColor} ${bgGlow} flex flex-col items-center justify-center m-2 reveal-item shadow-[0_0_15px_rgba(0,0,0,0.5)] ${shadowColor} transition-transform hover:scale-105 tech-card overflow-hidden group`;
+            div.style.animationDelay = `${index * 0.1}s`; 
+
+            div.innerHTML = `
+                <!-- Scanline Overlay inside card -->
+                <div class="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30"></div>
+                
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+                
+                <!-- Tech Header Line -->
+                <div class="absolute top-0 w-full h-1 ${borderColor.replace('border', 'bg')} opacity-50"></div>
+
+                <div class="relative w-full h-3/4 p-4 flex items-center justify-center overflow-hidden">
+                    <img src="${item.img}" 
+                         onerror="this.src='https://placehold.co/150x150/000000/ffffff?text=${item.type.toUpperCase()}'" 
+                         class="max-w-full max-h-full object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-500">
+                </div>
+                
+                <div class="z-10 text-center px-2 h-1/4 flex flex-col justify-center w-full bg-black/60 border-t border-white/10">
+                    <p class="font-bold text-xs ${textColor} uppercase leading-tight truncate w-full font-mono tracking-wider">${item.name}</p>
+                    <div class="flex justify-center mt-1 text-[10px] text-white/50 tracking-widest">
+                        ${getStars(item.type)}
+                    </div>
+                </div>
+                
+                <!-- Corner Accents -->
+                <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 ${borderColor}"></div>
+                <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 ${borderColor}"></div>
+            `;
+            
+            return div;
+        }
+
+        function getStars(type) {
+            if (type === 'grand') return '★★★★★';
+            if (type === 'medium') return '★★★★';
+            return '★★★';
+        }
+
+        function resetToHome() {
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('flex');
+            document.getElementById('home-screen').classList.remove('hidden');
+        }
+
+        function replayGacha() {
+            startGacha(currentPullCount);
+        }
+
+        // Estado inicial: primeiro banner selecionado (Artist Cache)
+        selectBanner(0);
+
+    </script>
+</body>
+</html>
