@@ -290,6 +290,33 @@
         .text-green-500 { color: var(--accent-color) !important; }
         .border-green-500 { border-color: var(--accent-color) !important; }
         .bg-green-500 { background-color: var(--accent-color) !important; }
+
+        /* Pull Buttons Styles - Dynamic based on accent color */
+        .pull-btn {
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            background-color: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .pull-btn:hover {
+            background-color: var(--accent-color);
+            color: #000000;
+            border-color: var(--accent-color);
+        }
+
+        .pull-btn-filled {
+            border: 2px solid var(--accent-color);
+            color: #000000;
+            background-color: var(--accent-color);
+            transition: all 0.3s ease;
+        }
+        
+        .pull-btn-filled:hover {
+            background-color: var(--accent-color);
+            color: #000000;
+            border-color: var(--accent-color);
+        }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col relative">
@@ -374,10 +401,10 @@
 
                     <!-- Pull Buttons (Right) -->
                     <div class="flex gap-4">
-                        <button onclick="startGacha(1)" class="bg-black border-2 border-green-500 text-green-500 px-5 py-2.5 text-xl font-bold hover:bg-green-500 hover:text-black transition duration-300 uppercase">
+                        <button id="pull-x1-btn" onclick="startGacha(1)" class="pull-btn px-5 py-2.5 text-xl font-bold uppercase">
                             <span class="block">PULL x1</span>
                         </button>
-                        <button id="pull-main-btn" onclick="startGacha(5)" class="bg-green-500 text-black border-2 border-green-500 px-5 py-2.5 text-xl font-bold hover:bg-white hover:border-white transition duration-300 uppercase">
+                        <button id="pull-x5-btn" onclick="startGacha(5)" class="pull-btn px-5 py-2.5 text-xl font-bold uppercase">
                             <span class="block">PULL x5</span>
                         </button>
                     </div>
@@ -562,12 +589,6 @@
             const mainBannerImg = document.getElementById('current-banner-img');
             if (mainBannerImg) {
                 mainBannerImg.style.boxShadow = `0 0 30px ${color}40`;
-            }
-
-            // Atualiza glow do botão principal de Pull x5
-            const pullMainBtn = document.getElementById('pull-main-btn');
-            if (pullMainBtn) {
-                pullMainBtn.style.boxShadow = `0 0 20px ${color}80`;
             }
         }
 
